@@ -2,20 +2,29 @@ use image::imageops::FilterType;
 use image::{DynamicImage, GenericImageView, ImageFormat};
 use std::error::Error;
 use std::io::Cursor;
+
+/// A type alias for a result that can return any type of error.
 pub type Result<T> = std::result::Result<T, Box<dyn Error + Send + Sync + 'static>>;
 
+/// A trait for clipboard content data.
 pub trait ContentData {
+	/// Get the format of the content.
 	fn get_format(&self) -> ContentFormat;
 
+	/// Get the content as a byte slice.
 	fn as_bytes(&self) -> &[u8];
 
+	/// Get the content as a string.
 	fn as_str(&self) -> Result<&str>;
 }
 
+/// A trait for clipboard handlers.
 pub trait ClipboardHandler {
+	/// Called when the clipboard content changes.
 	fn on_clipboard_change(&mut self);
 }
 
+/// An enum representing different types of clipboard content.
 pub enum ClipboardContent {
 	Text(String),
 	Rtf(String),
@@ -42,10 +51,8 @@ impl ContentData for ClipboardContent {
 			ClipboardContent::Text(data) => data.as_bytes(),
 			ClipboardContent::Rtf(data) => data.as_bytes(),
 			ClipboardContent::Html(data) => data.as_bytes(),
-			// dynamic image is not supported to as bytes
 			ClipboardContent::Image(_) => &[],
 			ClipboardContent::Files(data) => {
-				// use first file path as data
 				if let Some(path) = data.first() {
 					path.as_bytes()
 				} else {
@@ -63,7 +70,6 @@ impl ContentData for ClipboardContent {
 			ClipboardContent::Html(data) => Ok(data),
 			ClipboardContent::Image(_) => Err("can't convert image to string".into()),
 			ClipboardContent::Files(data) => {
-				// use first file path as data
 				if let Some(path) = data.first() {
 					Ok(path)
 				} else {
@@ -75,6 +81,7 @@ impl ContentData for ClipboardContent {
 	}
 }
 
+/// An enum representing different formats of clipboard content.
 #[derive(Clone)]
 pub enum ContentFormat {
 	Text,
@@ -85,54 +92,52 @@ pub enum ContentFormat {
 	Other(String),
 }
 
+/// A struct representing image data in Rust.
 pub struct RustImageData {
 	width: u32,
 	height: u32,
 	data: Option<DynamicImage>,
 }
 
-/// 此处的 RustImageBuffer 已经是带有图片格式的字节流，例如 png,jpeg;
+/// A struct representing image data in Rust as a byte buffer.
 pub struct RustImageBuffer(Vec<u8>);
 
+/// A trait for manipulating images in Rust.
 pub trait RustImage: Sized {
-	/// create an empty image
+	/// Create an empty image.
 	fn empty() -> Self;
 
+	/// Check if the image is empty.
 	fn is_empty(&self) -> bool;
 
-	/// Read image from file path
+	/// Read an image from a file path.
 	fn from_path(path: &str) -> Result<Self>;
 
-	/// Create a new image from a byte slice
+	/// Create a new image from a byte slice.
 	fn from_bytes(bytes: &[u8]) -> Result<Self>;
 
+	/// Create a new image from a dynamic image.
 	fn from_dynamic_image(image: DynamicImage) -> Self;
 
-	/// width and height
+	/// Get the size (width and height) of the image.
 	fn get_size(&self) -> (u32, u32);
 
-	/// Scale this image down to fit within a specific size.
-	/// Returns a new image. The image's aspect ratio is preserved.
-	/// The image is scaled to the maximum possible size that fits
-	/// within the bounds specified by `nwidth` and `nheight`.
-	///
-	/// This method uses a fast integer algorithm where each source
-	/// pixel contributes to exactly one target pixel.
-	/// May give aliasing artifacts if new size is close to old size.
+	/// Scale the image down to fit within a specific size.
 	fn thumbnail(&self, width: u32, height: u32) -> Result<Self>;
 
-	/// en: Adjust the size of the image without retaining the aspect ratio
-	/// zh: 调整图片大小，不保留长宽比
+	/// Resize the image to a specific size.
 	fn resize(&self, width: u32, height: u32, filter: FilterType) -> Result<Self>;
 
+	/// Convert the image to JPEG format.
 	fn to_jpeg(&self) -> Result<RustImageBuffer>;
 
-	/// en: Convert to png format, the returned image is a new image, and the data itself will not be modified
-	/// zh: 转为 png 格式,返回的为新的图片，本身数据不会修改
+	/// Convert the image to PNG format.
 	fn to_png(&self) -> Result<RustImageBuffer>;
 
+	/// Convert the image to bitmap format.
 	fn to_bitmap(&self) -> Result<RustImageBuffer>;
 
+	/// Save the image to a file path.
 	fn save_to_path(&self, path: &str) -> Result<()>;
 }
 
@@ -243,10 +248,12 @@ impl RustImage for RustImageData {
 }
 
 impl RustImageBuffer {
+	/// Get the byte slice of the image buffer.
 	pub fn get_bytes(&self) -> &[u8] {
 		&self.0
 	}
 
+	/// Save the image buffer to a file path.
 	pub fn save_to_path(&self, path: &str) -> Result<()> {
 		std::fs::write(path, &self.0)?;
 		Ok(())
