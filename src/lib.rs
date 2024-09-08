@@ -1,5 +1,7 @@
 pub mod common;
 mod platform;
+use std::time::Duration;
+
 pub use common::{ClipboardContent, ClipboardHandler, ContentFormat, Result, RustImageData};
 pub use image::imageops::FilterType;
 pub use platform::{ClipboardContext, ClipboardWatcherContext, WatcherShutdown};
@@ -59,7 +61,7 @@ pub trait ClipboardWatcher<T: ClipboardHandler>: Send {
 
 	/// zh: 开始监视剪切板变化，这是一个阻塞方法，直到监视结束，或者调用了stop方法，所以建议在单独的线程中调用
 	/// en: Start monitoring clipboard changes, this is a blocking method, until the monitoring ends, or the stop method is called, so it is recommended to call it in a separate thread
-	fn start_watch(&mut self);
+	fn start_watch(&mut self, update_frequency: Duration);
 
 	/// zh: 获得停止监视的通道，可以通过这个通道停止监视
 	/// en: Get the channel to stop monitoring, you can stop monitoring through this channel

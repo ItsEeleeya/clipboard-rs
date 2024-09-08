@@ -51,7 +51,7 @@ impl<T: ClipboardHandler> ClipboardWatcher<T> for ClipboardWatcherContext<T> {
 		self
 	}
 
-	fn start_watch(&mut self) {
+	fn start_watch(&mut self, update_frequency: Duration) {
 		if self.running {
 			println!("already start watch!");
 			return;
@@ -64,11 +64,7 @@ impl<T: ClipboardHandler> ClipboardWatcher<T> for ClipboardWatcherContext<T> {
 		let mut last_change_count = unsafe { self.pasteboard.changeCount() };
 		loop {
 			// if receive stop signal, break loop
-			if self
-				.stop_receiver
-				.recv_timeout(Duration::from_millis(500))
-				.is_ok()
-			{
+			if self.stop_receiver.recv_timeout(update_frequency).is_ok() {
 				break;
 			}
 			let change_count = unsafe { self.pasteboard.changeCount() };

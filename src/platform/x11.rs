@@ -698,7 +698,7 @@ impl<T: ClipboardHandler> ClipboardWatcher<T> for ClipboardWatcherContext<T> {
 		self
 	}
 
-	fn start_watch(&mut self) {
+	fn start_watch(&mut self, update_frequency: Duration) {
 		let watch_server = XServerContext::new().expect("Failed to create X server context");
 		let screen = watch_server
 			.conn
@@ -722,11 +722,7 @@ impl<T: ClipboardHandler> ClipboardWatcher<T> for ClipboardWatcherContext<T> {
 		cookie.check().unwrap();
 
 		loop {
-			if self
-				.stop_receiver
-				.recv_timeout(Duration::from_millis(500))
-				.is_ok()
-			{
+			if self.stop_receiver.recv_timeout(update_frequency).is_ok() {
 				break;
 			}
 			let event = match watch_server

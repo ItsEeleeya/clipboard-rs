@@ -425,7 +425,7 @@ impl<T: ClipboardHandler> ClipboardWatcher<T> for ClipboardWatcherContext<T> {
 		self
 	}
 
-	fn start_watch(&mut self) {
+	fn start_watch(&mut self, _update_frequency: Duration) {
 		if self.running {
 			println!("already start watch!");
 			return;

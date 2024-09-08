@@ -38,5 +38,5 @@ fn main() {
 	});
 
 	println!("start watch!");
-	watcher.start_watch();
+	watcher.start_watch(std::time::Duration::from_millis(500));
 }
